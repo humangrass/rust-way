@@ -1,4 +1,5 @@
 use chrono::{NaiveDate, NaiveTime};
+use clap::ValueEnum;
 
 pub struct Task {
     pub id: u32,
@@ -20,6 +21,7 @@ pub struct TaskSlot {
     pub end_time: NaiveTime,
 }
 
+#[derive(Debug, Clone, ValueEnum)]
 pub enum Priority {
     Low,
     Medium,

@@ -4,5 +4,7 @@ mod storage;
 mod service;
 
 fn main() {
-    println!("Todo app");
+    let cli = cli::setup_cli();
+    let cli_matches = cli.get_matches();
+    println!("{:?}", cli_matches)
 }
