@@ -23,9 +23,6 @@ pub enum Commands {
 
     /// Marks a task as completed
     Complete(CompleteTask),
-
-    /// Creates a daily schedule
-    Schedule(CreateSchedule),
 }
 
 #[derive(Debug, Args)]
@@ -91,17 +88,6 @@ pub struct CompleteTask {
     pub id: u32,
 }
 
-#[derive(Debug, Args)]
-pub struct CreateSchedule {
-    /// Date for the schedule (format: YYYY-MM-DD)
-    #[arg(long)]
-    pub date: NaiveDate,
-
-    /// List of task IDs to include in the schedule
-    #[arg(long)]
-    pub tasks: Vec<u32>,
-}
-
 pub fn setup_cli() -> Command {
     Command::new("todo")
         .about("A CLI-based TODO list manager on Rust")
@@ -112,5 +98,4 @@ pub fn setup_cli() -> Command {
         .subcommand(ListTasks::augment_args(Command::new("list").about("List tasks with optional filtering")))
         .subcommand(EditTask::augment_args(Command::new("edit").about("Edit an existing task")))
         .subcommand(CompleteTask::augment_args(Command::new("complete").about("Mark a task as completed")))
-        .subcommand(CreateSchedule::augment_args(Command::new("schedule").about("Create a daily schedule")))
 }

@@ -10,11 +10,6 @@ pub struct Task {
     pub status: Status,
 }
 
-pub struct Schedule {
-    pub date: NaiveDate,
-    pub tasks: Vec<TaskSlot>,
-}
-
 pub struct TaskSlot {
     pub task_id: u32,
     pub start_time: NaiveTime,
