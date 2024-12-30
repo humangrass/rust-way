@@ -50,6 +50,20 @@ impl Task {
         Task::save_tasks(&tasks);
     }
 
+    pub fn start(args: &ArgMatches) {
+        // it's OK
+        let id = args.get_one::<u32>("id").expect("id is required");
+        let mut tasks = Self::load_tasks();
+        // TODO: не слишком оптимально. Лучше через HashMap и переписать формат данных в файле
+        if let Some(task) = tasks.iter_mut().find(|task| task.id == *id) {
+            task.status = Status::InProgress;
+        } else {
+            println!("Task with ID {} not found.", id);
+        }
+
+        Self::save_tasks(&tasks);
+    }
+
     fn load_tasks() -> Vec<Task> {
         if let Ok(mut file) = File::open(FILE_NAME) {
             let mut content = String::new();
@@ -106,7 +120,7 @@ impl Task {
         let tasks = Task::load_tasks();
 
         if tasks.is_empty() {
-            println!("No tasks found.");
+            println!("Tasks not found.");
             return;
         }
 

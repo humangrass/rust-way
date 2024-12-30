@@ -14,6 +14,7 @@ fn main() {
             Task::new(sub_matches);
         }
         Some((cli::COMMAND_START, sub_matches)) => {
+            Task::start(sub_matches);
             println!("Start task");
         }
         Some((cli::COMMAND_DELETE, sub_matches)) => {
