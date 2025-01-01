@@ -1,0 +1,8 @@
+[package]
+name = "try-kafka"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rdkafka = { version = "0.37.0", features = ["tokio"] }
+tokio = { version = "1.42.0", features = ["full"] }
