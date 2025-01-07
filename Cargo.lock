@@ -483,7 +483,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "todo"
+name = "todo-cli"
 version = "0.1.0"
 dependencies = [
  "chrono",

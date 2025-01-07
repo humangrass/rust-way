@@ -85,7 +85,7 @@ pub struct CompleteTask {
 }
 
 pub fn setup_cli() -> Command {
-    Command::new("todo")
+    Command::new("todo-cli")
         .about("A CLI-based TODO list manager on Rust")
         .subcommand_required(true)
         .arg_required_else_help(true)
