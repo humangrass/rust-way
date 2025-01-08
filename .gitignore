@@ -1,7 +1,9 @@
 /target
 *volumes*
 
-.idea
-.vscode
+.*
+*.yml
+*.yaml
 
-todo_tasks.json
+!.gitignore
+!*example*
