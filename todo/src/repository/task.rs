@@ -40,7 +40,7 @@ impl TaskRepository {
         let updated_at = row.updated_at.unwrap();
 
         let new_task = Task {
-            id: row.id as i64,
+            id: row.id,
             title: row.title.to_string(),
             description: row.description.to_string(),
             status: row.status,
@@ -95,8 +95,27 @@ impl TaskRepository {
         Ok(tasks)
     }
 
-    pub async fn by_id(&self, task_id: i32) -> Result<Task> {
-        todo!()
+    pub async fn by_id(&self, id: i32) -> Result<Option<Task>, sqlx::Error> {
+        // TODO: IDK... The trait `From<std::option::Option<chrono::DateTime<Utc>>>` is not implemented for `chrono::DateTime<Utc>`, which is required by `std::option::Option<chrono::DateTime<Utc>>: Into<_>`
+        sqlx::query_as_unchecked!(
+            Task,
+            r#"
+            SELECT
+                id,
+                title,
+                description,
+                status,
+                starts_at,
+                ends_at,
+                created_at,
+                updated_at
+            FROM tasks
+            WHERE id = $1
+            "#,
+            id
+        )
+            .fetch_optional(&*self.pool)
+            .await
     }
 
     pub async fn delete(&self, task_id: i32) -> Result<Task> {

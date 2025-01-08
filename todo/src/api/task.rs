@@ -2,7 +2,7 @@ use crate::app::AppState;
 use crate::errors::ErrorResponse;
 use crate::models::task::{CreateTaskRequest, Task, TaskResponse};
 use axum::{
-    extract::{Extension, Json},
+    extract::{Extension, Json, Path},
     http::StatusCode,
     routing::{delete, get, post, put},
     Router,
@@ -47,7 +47,7 @@ pub async fn create_task(
 
 #[utoipa::path(
     get,
-    path = "/api/tasks",
+    path = "/api/task/list",
     responses(
         (status = 200, description = "List of tasks retrieved successfully", body = [TaskResponse]),
         (status = 500, description = "Internal server error")
@@ -67,11 +67,44 @@ pub async fn get_tasks(
     }
 }
 
+#[utoipa::path(
+    get,
+    path = "/api/task/{id}",
+    responses(
+        (status = 200, description = "List of tasks retrieved successfully", body = [TaskResponse]),
+        (status = 404, description = "Task not found", body = ErrorResponse),
+        (status = 500, description = "Internal server error")
+    ),
+    params(
+        ("id" = i32, Path, description = "Task ID")
+    )
+)]
+pub async fn get_task(
+    Path(id): Path<i32>,
+    Extension(state): Extension<Arc<AppState>>,
+) -> Result<Json<TaskResponse>, (StatusCode, Json<ErrorResponse>)> {
+    match state.task_repository.by_id(id).await {
+        Ok(Some(task)) => Ok(Json(TaskResponse::from(task))),
+        Ok(None) => Err((
+            StatusCode::NOT_FOUND,
+            Json(ErrorResponse {
+                message: "Task not found.".to_string(),
+            }),
+        )),
+        Err(_) => Err((
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(ErrorResponse {
+                message: "Internal server error.".to_string(),
+            }),
+        )),
+    }
+}
+
 pub fn router() -> Router {
     Router::new()
         .route("/", post(create_task))
-        .route("/", get(get_tasks))
-    // .route("/:id", get(get_by_id))
-    // .route("/:id", put(update_task))
-    // .route("/:id", delete(delete_task))
+        .route("/list", get(get_tasks))
+        .route("/{id}", get(get_task))
+    // .route("/{id}", put(update_task))
+    // .route("/{id}", delete(delete_task))
 }

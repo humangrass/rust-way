@@ -11,6 +11,7 @@ pub mod task;
     paths(
         task::create_task,
         task::get_tasks,
+        task::get_task,
     ),
     tags(
         (name = "TODO application", description = "API для управления задачами"),
@@ -19,7 +20,7 @@ pub mod task;
 struct ApiDoc;
 
 pub fn create_router(app_state: Arc<AppState>) -> Router {
-    let api_router = Router::new().nest("/api/tasks", task::router());
+    let api_router = Router::new().nest("/api/task", task::router());
 
     Router::new()
         .merge(Scalar::with_url("/docs", ApiDoc::openapi()))
