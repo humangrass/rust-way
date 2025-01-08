@@ -1,13 +1,14 @@
 use crate::models::task::Task;
 use anyhow::Result;
 use sqlx::PgPool;
+use std::sync::Arc;
 
-pub struct TaskRepository<'a> {
-    pool: &'a PgPool,
+pub struct TaskRepository {
+    pool: Arc<PgPool>,
 }
 
-impl<'a> TaskRepository<'a> {
-    pub fn new(pool: &'a PgPool) -> Self {
+impl TaskRepository {
+    pub fn new(pool: Arc<PgPool>) -> Self {
         Self { pool }
     }
 
@@ -32,7 +33,7 @@ impl<'a> TaskRepository<'a> {
             task.starts_at,
             task.ends_at,
         )
-        .fetch_one(self.pool)
+        .fetch_one(&*self.pool)
         .await?;
 
         let created_at = row.created_at.unwrap();
@@ -50,5 +51,59 @@ impl<'a> TaskRepository<'a> {
         };
 
         Ok(new_task)
+    }
+
+    pub async fn list(&self) -> Result<Vec<Task>> {
+        // TODO: IDK... The trait `From<std::option::Option<chrono::DateTime<Utc>>>` is not implemented for `chrono::DateTime<Utc>`, which is required by `std::option::Option<chrono::DateTime<Utc>>: Into<_>`
+        // use chrono::{DateTime, TimeZone, Utc};
+        // let tasks = sqlx::query_as!(
+        //     Task,
+        //     r#"
+        //     SELECT
+        //         id,
+        //         title,
+        //         description,
+        //         status,
+        //         starts_at,
+        //         ends_at AS "ends_at: Option<DateTime<Utc>>",
+        //         created_at,
+        //         updated_at
+        //     FROM tasks
+        //     "#
+        // )
+        // .fetch_all(&*self.pool)
+        // .await?;
+
+        let tasks = sqlx::query_as_unchecked!(
+            Task,
+            r#"
+            SELECT
+                id,
+                title,
+                description,
+                status,
+                starts_at,
+                ends_at,
+                created_at,
+                updated_at
+            FROM tasks
+            "#
+        )
+        .fetch_all(&*self.pool)
+        .await?;
+
+        Ok(tasks)
+    }
+
+    pub async fn by_id(&self, task_id: i32) -> Result<Task> {
+        todo!()
+    }
+
+    pub async fn delete(&self, task_id: i32) -> Result<Task> {
+        todo!()
+    }
+
+    pub async fn edit(&self, task_id: i32, task: &Task) -> Result<Task> {
+        todo!()
     }
 }

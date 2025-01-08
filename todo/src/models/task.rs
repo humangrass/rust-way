@@ -75,3 +75,40 @@ impl From<CreateTaskRequest> for Task {
         }
     }
 }
+
+#[derive(Serialize, ToSchema)]
+pub struct TaskResponse {
+    pub id: i64,
+    pub title: String,
+    pub description: String,
+    pub status: String,
+    pub starts_at: i64,
+    pub ends_at: Option<i64>,
+    pub created_at: i64,
+    pub updated_at: i64,
+}
+
+impl From<Task> for TaskResponse {
+    fn from(task: Task) -> Self {
+        // let ends_at = match task.ends_at {
+        //     Some(ends_at) => Some(ends_at.timestamp()),
+        //     None => None,
+        // };
+        Self {
+            id: task.id,
+            title: task.title,
+            description: task.description,
+            status: task.status,
+            starts_at: task.starts_at.timestamp(),
+            ends_at: Some(100),
+            // ends_at,
+            created_at: task.created_at.timestamp(),
+            updated_at: task.updated_at.timestamp(),
+        }
+    }
+}
+impl TaskResponse {
+    pub fn from_tasks(tasks: Vec<Task>) -> Vec<Self> {
+        tasks.into_iter().map(TaskResponse::from).collect()
+    }
+}
