@@ -12,6 +12,8 @@ pub mod task;
         task::create_task,
         task::get_tasks,
         task::get_task,
+        task::update_task,
+        task::delete_task,
     ),
     tags(
         (name = "TODO application", description = "API для управления задачами"),

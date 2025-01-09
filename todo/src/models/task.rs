@@ -15,14 +15,14 @@ pub struct Task {
 }
 
 #[derive(Debug, Deserialize, Serialize, ToSchema)]
-pub struct CreateTaskRequest {
+pub struct TaskRequest {
     pub title: String,
     pub description: String,
     pub starts_at: i64,
     pub ends_at: Option<i64>,
 }
 
-impl CreateTaskRequest {
+impl TaskRequest {
     pub fn validate(&self) -> Result<(), String> {
         if self.title.trim().is_empty() {
             return Err("Title cannot be empty.".to_string());
@@ -57,10 +57,10 @@ impl CreateTaskRequest {
     }
 }
 
-impl From<CreateTaskRequest> for Task {
-    fn from(request: CreateTaskRequest) -> Self {
-        let starts_at = CreateTaskRequest::datetime(request.starts_at);
-        let ends_at = request.ends_at.map(CreateTaskRequest::datetime);
+impl From<TaskRequest> for Task {
+    fn from(request: TaskRequest) -> Self {
+        let starts_at = TaskRequest::datetime(request.starts_at);
+        let ends_at = request.ends_at.map(TaskRequest::datetime);
 
         Task {
             id: 0, // OK

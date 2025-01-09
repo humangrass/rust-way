@@ -114,15 +114,55 @@ impl TaskRepository {
             "#,
             id
         )
-            .fetch_optional(&*self.pool)
-            .await
+        .fetch_optional(&*self.pool)
+        .await
     }
 
-    pub async fn delete(&self, task_id: i32) -> Result<Task> {
-        todo!()
+    pub async fn delete(&self, task_id: i32) -> Result<(), sqlx::Error> {
+        let rows_affected = sqlx::query!(
+            r#"
+            DELETE FROM tasks
+            WHERE id = $1
+            "#,
+            task_id
+        )
+        .execute(&*self.pool)
+        .await?
+        .rows_affected();
+
+        if rows_affected == 0 {
+            return Err(sqlx::Error::RowNotFound);
+        }
+
+        Ok(())
     }
 
-    pub async fn edit(&self, task_id: i32, task: &Task) -> Result<Task> {
-        todo!()
+    pub async fn update(&self, task_id: i32, task: &Task) -> Result<Option<Task>, sqlx::Error> {
+        // TODO: query_as_unchecked: same error
+        let updated_task = sqlx::query_as_unchecked!(
+            Task,
+            r#"
+            UPDATE tasks
+            SET
+                title = $1,
+                description = $2,
+                status = $3,
+                starts_at = $4,
+                ends_at = $5,
+                updated_at = NOW()
+            WHERE id = $6
+            RETURNING id, title, description, status, starts_at, ends_at, created_at, updated_at
+            "#,
+            task.title,
+            task.description,
+            task.status,
+            task.starts_at,
+            task.ends_at,
+            task_id
+        )
+        .fetch_optional(&*self.pool)
+        .await?;
+
+        Ok(updated_task)
     }
 }
