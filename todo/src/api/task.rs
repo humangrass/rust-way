@@ -11,7 +11,7 @@ use std::sync::Arc;
 
 #[utoipa::path(
     post,
-    path = "/api/tasks",
+    path = "/api/task",
     request_body = CreateTaskRequest,
     responses(
         (status = 201, description = "Task created successfully"),
