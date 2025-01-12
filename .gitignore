@@ -1,5 +1,11 @@
 /target
-/volumes
+*volumes*
 
-.idea
-.vscode
+.*
+*.yml
+*.yaml
+
+!.github
+!.github/workflows/*
+!.gitignore
+!*example*

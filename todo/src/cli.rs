@@ -1,101 +1,52 @@
-use chrono::NaiveDate;
-use clap::{Args, Command, Subcommand};
-use crate::models::Priority;
+use std::path::PathBuf;
+use clap::Parser;
+use multitool_hg::logger::tracer_logger::LogLevel;
 
-#[derive(Debug)]
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
 pub struct Cli {
-    pub command: Commands,
+    /// Sets a custom path to config file
+    #[arg(short, long, value_name = "CONFIG_FILE", default_value = "todo.config.yaml")]
+    pub config: PathBuf,
+
+    /// Sets a custom log level
+    #[arg(
+        short,
+        long,
+        value_name = "LOG_LEVEL",
+        default_value = "info",
+        value_enum
+    )]
+    pub log_level: LogLevel,
 }
 
-#[derive(Debug, Subcommand)]
-pub enum Commands {
-    /// Adds a new task
-    Add(AddTask),
-
-    /// Deletes a task by ID
-    Delete(DeleteTask),
-
-    /// Lists tasks (optionally filtered)
-    List(ListTasks),
-
-    /// Edits an existing task
-    Edit(EditTask),
-
-    /// Marks a task as completed
-    Complete(CompleteTask),
+impl Cli {
+    pub fn new() -> Cli {
+        Cli::parse()
+    }
 }
 
-#[derive(Debug, Args)]
-pub struct AddTask {
-    /// Title of the task
-    #[arg(long)]
-    pub title: String,
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use clap::Parser;
 
-    /// Description of the task
-    #[arg(long)]
-    pub description: Option<String>,
+    #[test]
+    fn test_default_arguments() {
+        let args = Cli::try_parse_from(&["test-app"]).unwrap();
+        assert_eq!(args.config, PathBuf::from("todo.config.yaml"));
+        assert_eq!(args.log_level, LogLevel::Info);
+    }
 
-    /// Priority of the task (low, medium, high)
-    #[arg(long)]
-    pub priority: Option<Priority>,
+    #[test]
+    fn test_custom_arguments() {
+        let args = Cli::try_parse_from(&[
+            "test-app",
+            "--config", "custom_config.yaml",
+            "--log-level", "debug"
+        ]).unwrap();
 
-    /// Due date of the task (format: YYYY-MM-DD)
-    #[arg(long)]
-    pub due: Option<NaiveDate>,
-}
-
-#[derive(Debug, Args)]
-pub struct DeleteTask {
-    /// ID of the task to delete
-    #[arg(long)]
-    pub id: u32,
-}
-
-#[derive(Debug, Args)]
-pub struct ListTasks {
-    /// Filter tasks by criteria (e.g., priority=high)
-    #[arg(long)]
-    pub filter: Option<String>,
-}
-
-#[derive(Debug, Args)]
-pub struct EditTask {
-    /// ID of the task to edit
-    #[arg(long)]
-    pub id: u32,
-
-    /// New title for the task
-    #[arg(long)]
-    pub title: Option<String>,
-
-    /// New description for the task
-    #[arg(long)]
-    pub description: Option<String>,
-
-    /// New priority for the task
-    #[arg(long)]
-    pub priority: Option<Priority>,
-
-    /// New due date for the task (format: YYYY-MM-DD)
-    #[arg(long)]
-    pub due: Option<NaiveDate>,
-}
-
-#[derive(Debug, Args)]
-pub struct CompleteTask {
-    /// ID of the task to mark as complete
-    #[arg(long)]
-    pub id: u32,
-}
-
-pub fn setup_cli() -> Command {
-    Command::new("todo")
-        .about("A CLI-based TODO list manager on Rust")
-        .subcommand_required(true)
-        .arg_required_else_help(true)
-        .subcommand(AddTask::augment_args(Command::new("add").about("Add a new task")))
-        .subcommand(DeleteTask::augment_args(Command::new("delete").about("Delete a task by ID")))
-        .subcommand(ListTasks::augment_args(Command::new("list").about("List tasks with optional filtering")))
-        .subcommand(EditTask::augment_args(Command::new("edit").about("Edit an existing task")))
-        .subcommand(CompleteTask::augment_args(Command::new("complete").about("Mark a task as completed")))
+        assert_eq!(args.config, PathBuf::from("custom_config.yaml"));
+        assert_eq!(args.log_level, LogLevel::Debug);
+    }
 }

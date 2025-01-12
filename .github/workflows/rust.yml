@@ -1,0 +1,72 @@
+name: Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: todo
+        ports:
+          - 5432:5432
+        options: --health-cmd="pg_isready -U postgres" --health-timeout=30s --health-start-period=30s
+
+    steps:
+      - uses: actions/checkout@v3
+
+      # Cache Cargo dependencies
+      - name: Cache Cargo registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-registry-
+
+      # Cache Cargo build
+      - name: Cache Cargo build
+        uses: actions/cache@v3
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-target-${{ hashFiles('**/Cargo.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-target-
+
+      # Cache sqlx-cli installation
+      - name: Cache sqlx-cli
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/bin
+          key: ${{ runner.os }}-sqlx-cli-${{ hashFiles('**/Cargo.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-sqlx-cli-
+
+      # Setup Rust toolchain
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      # Install sqlx-cli if not cached
+      - name: Install sqlx-cli
+        run: cargo install sqlx-cli
+
+      - name: Apply SQL migrations
+        run: |
+          DATABASE_URL=postgres://postgres:password@localhost:5432/todo sqlx migrate run --source todo/migrations
+
+      - name: Run Tests
+        run: |
+          DATABASE_URL=postgres://postgres:password@localhost:5432/todo cargo test --no-default-features --verbose -p todo --bin todo
