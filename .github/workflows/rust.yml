@@ -35,6 +35,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-registry-
 
+      # Cache Cargo build
       - name: Cache Cargo build
         uses: actions/cache@v3
         with:
@@ -43,19 +44,31 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-target-
 
+      # Cache sqlx-cli installation
+      - name: Cache sqlx-cli
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/bin
+          key: ${{ runner.os }}-sqlx-cli-${{ hashFiles('**/Cargo.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-sqlx-cli-
+
       # Setup Rust toolchain
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           override: true
 
+      # Install sqlx-cli if not cached
       - name: Install sqlx-cli
         run: cargo install sqlx-cli
 
+      # Apply SQL migrations
       - name: Apply SQL migrations
         run: |
           DATABASE_URL=postgres://postgres:password@localhost:5432/todo sqlx migrate run --source todo/migrations
 
+      # Run Tests
       - name: Run Tests
         run: |
           DATABASE_URL=postgres://postgres:password@localhost:5432/todo cargo test --no-default-features --verbose -p todo --bin todo
