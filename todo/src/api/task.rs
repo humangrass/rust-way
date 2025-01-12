@@ -1,6 +1,6 @@
 use crate::app::AppState;
 use crate::errors::ErrorResponse;
-use crate::models::task::{Task, TaskRequest, TaskResponse};
+use crate::models::task::{Task, TaskModel, TaskRequest, TaskResponse};
 use axum::{
     extract::{Extension, Json, Path},
     http::StatusCode,
@@ -34,7 +34,7 @@ pub async fn create_task(
 
     let task: Task = payload.into();
 
-    match state.task_repository.create(&task).await {
+    match state.task_repository.create(&TaskModel::from(task)).await {
         Ok(_) => Ok(StatusCode::CREATED),
         Err(_) => Err((
             StatusCode::INTERNAL_SERVER_ERROR,
@@ -57,7 +57,10 @@ pub async fn get_tasks(
     Extension(state): Extension<Arc<AppState>>,
 ) -> Result<Json<Vec<TaskResponse>>, (StatusCode, Json<ErrorResponse>)> {
     match state.task_repository.list().await {
-        Ok(tasks) => Ok(Json(TaskResponse::from_tasks(tasks))),
+        Ok(models) => {
+            let tasks: Vec<Task> = models.into_iter().map(Task::from).collect();
+            Ok(Json(TaskResponse::from_tasks(tasks)))
+        }
         Err(_) => Err((
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(ErrorResponse {
@@ -84,7 +87,7 @@ pub async fn get_task(
     Extension(state): Extension<Arc<AppState>>,
 ) -> Result<Json<TaskResponse>, (StatusCode, Json<ErrorResponse>)> {
     match state.task_repository.by_id(id).await {
-        Ok(Some(task)) => Ok(Json(TaskResponse::from(task))),
+        Ok(Some(model)) => Ok(Json(TaskResponse::from(Task::from(model)))),
         Ok(None) => Err((
             StatusCode::NOT_FOUND,
             Json(ErrorResponse {
@@ -130,8 +133,12 @@ pub async fn update_task(
 
     let task: Task = payload.into();
 
-    match state.task_repository.update(id, &task).await {
-        Ok(Some(task)) => Ok(Json(TaskResponse::from(task))),
+    match state
+        .task_repository
+        .update(id, &TaskModel::from(task))
+        .await
+    {
+        Ok(Some(model)) => Ok(Json(TaskResponse::from(Task::from(model)))),
         Ok(None) => Err((
             StatusCode::NOT_FOUND,
             Json(ErrorResponse {

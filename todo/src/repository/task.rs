@@ -1,4 +1,4 @@
-use crate::models::task::Task;
+use crate::models::task::TaskModel;
 use anyhow::Result;
 use sqlx::PgPool;
 use std::sync::Arc;
@@ -12,7 +12,7 @@ impl TaskRepository {
         Self { pool }
     }
 
-    pub async fn create(&self, task: &Task) -> Result<Task> {
+    pub async fn create(&self, model: &TaskModel) -> Result<TaskModel> {
         let row = sqlx::query!(
             r#"
             INSERT INTO tasks (title, description, status, starts_at, ends_at)
@@ -27,11 +27,11 @@ impl TaskRepository {
                 created_at,
                 updated_at
             "#,
-            task.title,
-            task.description,
-            task.status,
-            task.starts_at,
-            task.ends_at,
+            model.title,
+            model.description,
+            model.status,
+            model.starts_at,
+            model.ends_at,
         )
         .fetch_one(&*self.pool)
         .await?;
@@ -39,21 +39,19 @@ impl TaskRepository {
         let created_at = row.created_at.unwrap();
         let updated_at = row.updated_at.unwrap();
 
-        let new_task = Task {
+        Ok(TaskModel {
             id: row.id,
             title: row.title.to_string(),
             description: row.description.to_string(),
             status: row.status,
-            starts_at: task.starts_at,
+            starts_at: model.starts_at,
             ends_at: Default::default(),
             created_at,
             updated_at,
-        };
-
-        Ok(new_task)
+        })
     }
 
-    pub async fn list(&self) -> Result<Vec<Task>> {
+    pub async fn list(&self) -> Result<Vec<TaskModel>> {
         // TODO: IDK... The trait `From<std::option::Option<chrono::DateTime<Utc>>>` is not implemented for `chrono::DateTime<Utc>`, which is required by `std::option::Option<chrono::DateTime<Utc>>: Into<_>`
         // use chrono::{DateTime, TimeZone, Utc};
         // let tasks = sqlx::query_as!(
@@ -73,9 +71,8 @@ impl TaskRepository {
         // )
         // .fetch_all(&*self.pool)
         // .await?;
-
-        let tasks = sqlx::query_as_unchecked!(
-            Task,
+        let models = sqlx::query_as_unchecked!(
+            TaskModel,
             r#"
             SELECT
                 id,
@@ -92,13 +89,13 @@ impl TaskRepository {
         .fetch_all(&*self.pool)
         .await?;
 
-        Ok(tasks)
+        Ok(models)
     }
 
-    pub async fn by_id(&self, id: i32) -> Result<Option<Task>, sqlx::Error> {
+    pub async fn by_id(&self, id: i32) -> Result<Option<TaskModel>, sqlx::Error> {
         // TODO: IDK... The trait `From<std::option::Option<chrono::DateTime<Utc>>>` is not implemented for `chrono::DateTime<Utc>`, which is required by `std::option::Option<chrono::DateTime<Utc>>: Into<_>`
         sqlx::query_as_unchecked!(
-            Task,
+            TaskModel,
             r#"
             SELECT
                 id,
@@ -118,13 +115,13 @@ impl TaskRepository {
         .await
     }
 
-    pub async fn delete(&self, task_id: i32) -> Result<(), sqlx::Error> {
+    pub async fn delete(&self, id: i32) -> Result<(), sqlx::Error> {
         let rows_affected = sqlx::query!(
             r#"
             DELETE FROM tasks
             WHERE id = $1
             "#,
-            task_id
+            id
         )
         .execute(&*self.pool)
         .await?
@@ -137,10 +134,14 @@ impl TaskRepository {
         Ok(())
     }
 
-    pub async fn update(&self, task_id: i32, task: &Task) -> Result<Option<Task>, sqlx::Error> {
+    pub async fn update(
+        &self,
+        id: i32,
+        model: &TaskModel,
+    ) -> Result<Option<TaskModel>, sqlx::Error> {
         // TODO: query_as_unchecked: same error
         let updated_task = sqlx::query_as_unchecked!(
-            Task,
+            TaskModel,
             r#"
             UPDATE tasks
             SET
@@ -153,12 +154,12 @@ impl TaskRepository {
             WHERE id = $6
             RETURNING id, title, description, status, starts_at, ends_at, created_at, updated_at
             "#,
-            task.title,
-            task.description,
-            task.status,
-            task.starts_at,
-            task.ends_at,
-            task_id
+            model.title,
+            model.description,
+            model.status,
+            model.starts_at,
+            model.ends_at,
+            id
         )
         .fetch_optional(&*self.pool)
         .await?;
