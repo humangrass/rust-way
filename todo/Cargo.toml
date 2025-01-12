@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 multitool-hg = { version = "0.1", features = ["full"] }
-sqlx = { version = "0.8.3", features = ["runtime-tokio-rustls", "postgres", "chrono", "macros", "sqlx-macros"] }
+sqlx = { version = "0.8.3", features = ["runtime-tokio-rustls", "postgres", "chrono"] }
 anyhow = "1"
 chrono = { version = "0.4.38", features = ["serde"] }
 serde = { version = "1.0.217", features = ["derive"] }

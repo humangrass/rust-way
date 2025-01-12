@@ -12,6 +12,17 @@ jobs:
   check:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: todo
+        ports:
+          - 5432:5432
+        options: --health-cmd="pg_isready -U postgres" --health-timeout=30s --health-start-period=30s
+
     steps:
       - uses: actions/checkout@v3
 
@@ -38,6 +49,13 @@ jobs:
           toolchain: stable
           override: true
 
-      # Run Tests
+      - name: Install sqlx-cli
+        run: cargo install sqlx-cli
+
+      - name: Apply SQL migrations
+        run: |
+          DATABASE_URL=postgres://postgres:password@localhost:5432/todo sqlx migrate run --source todo/migrations
+
       - name: Run Tests
-        run: cargo test --verbose
+        run: |
+          DATABASE_URL=postgres://postgres:password@localhost:5432/todo cargo test --no-default-features --verbose -p todo --bin todo
