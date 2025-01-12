@@ -5,5 +5,7 @@
 *.yml
 *.yaml
 
+!.github
+!.github/workflows/*
 !.gitignore
 !*example*

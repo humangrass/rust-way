@@ -1,0 +1,43 @@
+name: Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      # Cache Cargo dependencies
+      - name: Cache Cargo registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-registry-
+
+      - name: Cache Cargo build
+        uses: actions/cache@v3
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-target-${{ hashFiles('**/Cargo.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-target-
+
+      # Setup Rust toolchain
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      # Run Tests
+      - name: Run Tests
+        run: cargo test --verbose
