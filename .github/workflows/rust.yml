@@ -63,12 +63,10 @@ jobs:
       - name: Install sqlx-cli
         run: cargo install sqlx-cli
 
-      # Apply SQL migrations
       - name: Apply SQL migrations
         run: |
           DATABASE_URL=postgres://postgres:password@localhost:5432/todo sqlx migrate run --source todo/migrations
 
-      # Run Tests
       - name: Run Tests
         run: |
           DATABASE_URL=postgres://postgres:password@localhost:5432/todo cargo test --no-default-features --verbose -p todo --bin todo
