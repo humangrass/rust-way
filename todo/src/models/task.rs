@@ -186,3 +186,156 @@ impl TaskResponse {
         tasks.into_iter().map(TaskResponse::from).collect()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::Utc;
+
+    #[test]
+    fn test_task_status_from_str() {
+        assert_eq!(TaskStatus::from_str("pending").unwrap(), TaskStatus::Pending);
+        assert_eq!(TaskStatus::from_str("in_progress").unwrap(), TaskStatus::InProgress);
+        assert_eq!(TaskStatus::from_str("completed").unwrap(), TaskStatus::Completed);
+        assert_eq!(TaskStatus::from_str("canceled").unwrap(), TaskStatus::Canceled);
+
+        assert!(TaskStatus::from_str("unknown").is_err());
+    }
+
+    #[test]
+    fn test_task_status_as_str() {
+        assert_eq!(TaskStatus::Pending.as_str(), "pending");
+        assert_eq!(TaskStatus::InProgress.as_str(), "in_progress");
+        assert_eq!(TaskStatus::Completed.as_str(), "completed");
+        assert_eq!(TaskStatus::Canceled.as_str(), "canceled");
+    }
+
+    #[test]
+    fn test_task_request_validation_success() {
+        let request = TaskRequest {
+            title: "Test Task".to_string(),
+            description: "Test Description".to_string(),
+            status: "pending".to_string(),
+            starts_at: Utc::now().timestamp(),
+            ends_at: None,
+        };
+
+        assert!(request.validate().is_ok());
+    }
+
+    #[test]
+    fn test_task_request_validation_empty_title() {
+        let request = TaskRequest {
+            title: "".to_string(),
+            description: "Test Description".to_string(),
+            status: "pending".to_string(),
+            starts_at: Utc::now().timestamp(),
+            ends_at: None,
+        };
+
+        assert_eq!(request.validate(), Err("Title cannot be empty.".to_string()));
+    }
+
+    #[test]
+    fn test_task_request_validation_invalid_status() {
+        let request = TaskRequest {
+            title: "Test Task".to_string(),
+            description: "Test Description".to_string(),
+            status: "invalid_status".to_string(),
+            starts_at: Utc::now().timestamp(),
+            ends_at: None,
+        };
+
+        assert_eq!(
+            request.validate(),
+            Err("Invalid status: invalid_status.".to_string())
+        );
+    }
+
+    #[test]
+    fn test_task_request_validation_negative_timestamps() {
+        let request = TaskRequest {
+            title: "Test Task".to_string(),
+            description: "Test Description".to_string(),
+            status: "pending".to_string(),
+            starts_at: -1,
+            ends_at: None,
+        };
+        // It works!
+        assert!(request.validate().is_ok());
+    }
+
+    #[test]
+    fn test_task_request_to_task() {
+        let request = TaskRequest {
+            title: "Test Task".to_string(),
+            description: "Test Description".to_string(),
+            status: "pending".to_string(),
+            starts_at: Utc::now().timestamp(),
+            ends_at: Some(Utc::now().timestamp() + 3600),
+        };
+
+        let task: Task = request.into();
+
+        assert_eq!(task.title, "Test Task");
+        assert_eq!(task.description, "Test Description");
+        assert_eq!(task.status, TaskStatus::Pending);
+    }
+
+    #[test]
+    fn test_task_to_task_response() {
+        let task = Task {
+            id: 1,
+            title: "Test Task".to_string(),
+            description: "Test Description".to_string(),
+            status: TaskStatus::Completed,
+            starts_at: Utc::now(),
+            ends_at: Some(Utc::now() + chrono::Duration::hours(1)),
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+        };
+
+        let response: TaskResponse = task.into();
+
+        assert_eq!(response.title, "Test Task");
+        assert_eq!(response.status, "completed");
+    }
+
+    #[test]
+    fn test_task_model_to_task_conversion() {
+        let model = TaskModel {
+            id: 1,
+            title: "Test Task".to_string(),
+            description: "Test Description".to_string(),
+            status: "in_progress".to_string(),
+            starts_at: Utc::now(),
+            ends_at: None,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+        };
+
+        let task: Task = model.into();
+
+        assert_eq!(task.title, "Test Task");
+        assert_eq!(task.status, TaskStatus::InProgress);
+    }
+
+    #[test]
+    fn test_task_to_task_model_conversion() {
+        let task = Task {
+            id: 1,
+            title: "Test Task".to_string(),
+            description: "Test Description".to_string(),
+            status: TaskStatus::Canceled,
+            starts_at: Utc::now(),
+            ends_at: None,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+        };
+
+        let model: TaskModel = task.into();
+
+        assert_eq!(model.title, "Test Task");
+        assert_eq!(model.status, "canceled");
+    }
+}
