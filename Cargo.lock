@@ -204,6 +204,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "bartender"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "clap",
+ "log",
+ "multitool-hg",
+ "serde",
+ "serde_yaml",
+ "sqlx",
+ "tokio",
+ "utoipa",
+ "utoipa-scalar",
+]
+
+[[package]]
 name = "base64"
 version = "0.22.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
