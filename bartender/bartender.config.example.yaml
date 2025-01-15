@@ -6,7 +6,7 @@ database:
   port: 5432
   username: user
   password: changeme123
-  database: test
+  database: bartender
   max_open_cons: 10
   min_idle_cons: 2
   conn_max_lifetime:
