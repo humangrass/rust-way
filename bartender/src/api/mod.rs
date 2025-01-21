@@ -11,7 +11,7 @@ use utoipa_scalar::{Scalar, Servable};
 #[openapi(
     paths(
         bartender::register,
-        // bartender::login,
+        bartender::login,
         // bartender::refresh,
         // bartender::validate
     ),

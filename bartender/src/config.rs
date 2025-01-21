@@ -9,6 +9,7 @@ use std::path::Path;
 pub struct AppConfig {
     pub host: String,
     pub port: String,
+    pub jwt_secret: String,
 }
 
 #[derive(Debug, Deserialize, Serialize)]

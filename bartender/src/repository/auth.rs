@@ -1,6 +1,7 @@
+use crate::entities::user::UserModel;
+use log::error;
 use sqlx::PgPool;
 use std::sync::Arc;
-use crate::entities::user::UserModel;
 
 pub struct AuthRepository {
     pool: Arc<PgPool>,
@@ -9,6 +10,7 @@ pub struct AuthRepository {
 #[derive(Debug)]
 pub enum AuthRepositoryError {
     UserAlreadyExists,
+    UserNotFound,
     #[allow(dead_code)] // Warning field `0` is never read: isn't true.
     DatabaseError(sqlx::Error),
 }
@@ -18,7 +20,6 @@ impl AuthRepositoryError {
         matches!(self, AuthRepositoryError::UserAlreadyExists)
     }
 }
-
 
 impl AuthRepository {
     pub fn new(pool: Arc<PgPool>) -> Self {
@@ -44,6 +45,26 @@ impl AuthRepository {
                         }
                     }
                 }
+                error!("Database error: {}", e);
+                Err(AuthRepositoryError::DatabaseError(e))
+            }
+        }
+    }
+
+    pub async fn find_by_username(
+        &self,
+        username: &String,
+    ) -> Result<UserModel, AuthRepositoryError> {
+        let query = sqlx::query_as!(
+            UserModel,
+            "SELECT id, username, email, password_hash FROM users WHERE username = $1",
+            username
+        );
+        match query.fetch_optional(&*self.pool).await {
+            Ok(Some(user)) => Ok(user),
+            Ok(None) => Err(AuthRepositoryError::UserNotFound),
+            Err(e) => {
+                error!("Database error: {}", e);
                 Err(AuthRepositoryError::DatabaseError(e))
             }
         }

@@ -1,4 +1,4 @@
-use crate::api::payload::RegisterPayload;
+use crate::api::payload::{AccessTokens, LoginPayload, RegisterPayload};
 use crate::app::AppState;
 use crate::entities::user::{User, UserModel};
 use axum::http::StatusCode;
@@ -6,9 +6,10 @@ use axum::routing::post;
 use axum::{debug_handler, Extension, Json, Router};
 use serde::Serialize;
 use std::sync::Arc;
+use utoipa::ToSchema;
 use validator::ValidationErrors;
 
-#[derive(Serialize)]
+#[derive(Serialize, ToSchema)]
 pub struct ErrorResponse {
     pub message: String,
     pub details: Option<serde_json::Value>,
@@ -97,14 +98,75 @@ pub async fn register(
 #[utoipa::path(
     post,
     path = "/api/auth/login",
-    // request_body = LoginPayload,
-    responses()
+    request_body = LoginPayload,
+    responses(
+        (status = 200, description = "Successful login", body = AccessTokens),
+        (status = 401, description = "Invalid credentials", body = ErrorResponse),
+        (status = 500, description = "Internal server error", body = ErrorResponse),
+    )
 )]
 pub async fn login(
     Extension(state): Extension<Arc<AppState>>,
-    Json(payload): Json<RegisterPayload>,
-) -> Result<StatusCode, (StatusCode, Json<ErrorResponse>)> {
-    todo!()
+    Json(payload): Json<LoginPayload>,
+) -> Result<Json<AccessTokens>, (StatusCode, Json<ErrorResponse>)> {
+    let user = match state
+        .auth_repository
+        .find_by_username(&payload.username)
+        .await
+    {
+        Ok(user) => User::from(user),
+        Err(_) => {
+            return Err((
+                StatusCode::UNAUTHORIZED,
+                Json(ErrorResponse {
+                    message: "Invalid username or password".to_string(),
+                    details: None,
+                }),
+            ));
+        }
+    };
+
+    if !bcrypt::verify(&payload.password, &user.password_hash).unwrap_or(false) {
+        return Err((
+            StatusCode::UNAUTHORIZED,
+            Json(ErrorResponse {
+                message: "Invalid username or password".to_string(),
+                details: None,
+            }),
+        ));
+    }
+
+    let access_token = match user.generate_access_token(&state.jwt_secret) {
+        Ok(access_token) => access_token,
+        Err(_) => {
+            return Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ErrorResponse {
+                    message: "Internal server error".to_string(),
+                    details: None,
+                }),
+            ));
+        }
+    };
+    let refresh_token = match user.generate_refresh_token(&state.jwt_secret) {
+        Ok(refresh_token) => refresh_token,
+        Err(_) => {
+            return Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ErrorResponse {
+                    message: "Internal server error".to_string(),
+                    details: None,
+                }),
+            ));
+        }
+    };
+
+    Ok(Json(AccessTokens {
+        access_token,
+        refresh_token,
+        token_type: "Bearer".to_string(),
+        expires_in: 60 * 60,
+    }))
 }
 
 #[utoipa::path(
@@ -128,8 +190,9 @@ pub async fn validate(
 }
 
 pub fn router() -> Router {
-    Router::new().route("/register", post(register))
-    // .route("/login", post(login))
+    Router::new()
+        .route("/register", post(register))
+        .route("/login", post(login))
     // .route("/refresh", post(refresh))
     // .route("/validate", get(validate))
 }

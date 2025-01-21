@@ -1,10 +1,10 @@
 use crate::entities::user::User;
+use bcrypt::{hash, DEFAULT_COST};
 use regex::Regex;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
 use validator::{Validate, ValidationError, ValidationErrors};
-use bcrypt::{hash, DEFAULT_COST};
 
 #[derive(Deserialize, ToSchema, Validate)]
 pub struct RegisterPayload {
@@ -52,4 +52,29 @@ impl TryFrom<RegisterPayload> for User {
             password_hash,
         })
     }
+}
+
+#[derive(Deserialize, ToSchema, Validate)]
+pub struct LoginPayload {
+    pub username: String,
+    pub password: String,
+}
+
+impl LoginPayload {
+    pub fn validation(&self) -> Result<(), ValidationErrors> {
+        // TODO: for validation use validator::{Validate, ValidationError, ValidationErrors};
+        if let Err(errors) = self.validate() {
+            return Err(errors);
+        }
+
+        Ok(())
+    }
+}
+
+#[derive(Serialize, ToSchema)]
+pub struct AccessTokens {
+    pub access_token: String,
+    pub refresh_token: String,
+    pub token_type: String,
+    pub expires_in: u64,
 }
