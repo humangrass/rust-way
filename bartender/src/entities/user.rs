@@ -1,8 +1,15 @@
+use crate::entities::claims::Claims;
 use anyhow::Context;
 use chrono::{Duration, Utc};
 use jsonwebtoken::{encode, Algorithm, EncodingKey, Header};
-use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+
+pub struct User {
+    pub id: Uuid,
+    pub username: String,
+    pub email: String,
+    pub password_hash: String,
+}
 
 pub struct UserModel {
     pub id: Uuid,
@@ -33,21 +40,12 @@ impl From<UserModel> for User {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Claims {
-    pub sub: String,
-    pub exp: usize,
-}
-
-pub struct User {
-    pub id: Uuid,
-    pub username: String,
-    pub email: String,
-    pub password_hash: String,
-}
-
 impl User {
-    pub fn generate_access_token(&self, jwt_secret: &str, expiration: u64) -> anyhow::Result<String> {
+    pub fn generate_access_token(
+        &self,
+        jwt_secret: &str,
+        expiration: u64,
+    ) -> anyhow::Result<String> {
         let claims = Claims {
             sub: self.id.to_string(),
             exp: (Utc::now() + Duration::seconds(expiration as i64)).timestamp() as usize,
@@ -61,7 +59,11 @@ impl User {
         .context("Failed to generate access token")
     }
 
-    pub fn generate_refresh_token(&self, jwt_secret: &str, expiration: u64) -> anyhow::Result<String> {
+    pub fn generate_refresh_token(
+        &self,
+        jwt_secret: &str,
+        expiration: u64,
+    ) -> anyhow::Result<String> {
         let claims = Claims {
             sub: self.id.to_string(),
             exp: (Utc::now() + Duration::seconds(expiration as i64)).timestamp() as usize,
