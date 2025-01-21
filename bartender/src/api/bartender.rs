@@ -41,7 +41,12 @@ fn format_validation_errors(errors: ValidationErrors) -> serde_json::Value {
     post,
     path = "/api/auth/register",
     request_body = RegisterPayload,
-    responses()
+    responses(
+        (status = 200, description = "Successful login", body = AccessTokens),
+        (status = 400, description = "Validation failed", body = ErrorResponse),
+        (status = 409, description = "User already exists", body = ErrorResponse),
+        (status = 500, description = "Internal server error", body = ErrorResponse),
+    )
 )]
 #[debug_handler]
 pub async fn register(
@@ -64,7 +69,7 @@ pub async fn register(
             return Err((
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(ErrorResponse {
-                    message: "Failed to process user".to_string(),
+                    message: "Internal server error".to_string(),
                     details: None,
                 }),
             ));
@@ -101,7 +106,7 @@ pub async fn register(
     request_body = LoginPayload,
     responses(
         (status = 200, description = "Successful login", body = AccessTokens),
-        (status = 401, description = "Invalid credentials", body = ErrorResponse),
+        (status = 401, description = "Invalid username or password", body = ErrorResponse),
         (status = 500, description = "Internal server error", body = ErrorResponse),
     )
 )]
@@ -136,7 +141,7 @@ pub async fn login(
         ));
     }
 
-    let access_token = match user.generate_access_token(&state.jwt_secret) {
+    let access_token = match user.generate_access_token(&state.jwt_state.jwt_secret, state.jwt_state.access_token_expiration) {
         Ok(access_token) => access_token,
         Err(_) => {
             return Err((
@@ -148,7 +153,7 @@ pub async fn login(
             ));
         }
     };
-    let refresh_token = match user.generate_refresh_token(&state.jwt_secret) {
+    let refresh_token = match user.generate_refresh_token(&state.jwt_state.jwt_secret, state.jwt_state.refresh_token_expiration) {
         Ok(refresh_token) => refresh_token,
         Err(_) => {
             return Err((
@@ -165,7 +170,7 @@ pub async fn login(
         access_token,
         refresh_token,
         token_type: "Bearer".to_string(),
-        expires_in: 60 * 60,
+        expires_in: state.jwt_state.access_token_expiration,
     }))
 }
 

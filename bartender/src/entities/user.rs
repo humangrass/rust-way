@@ -47,10 +47,10 @@ pub struct User {
 }
 
 impl User {
-    pub fn generate_access_token(&self, jwt_secret: &str) -> anyhow::Result<String> {
+    pub fn generate_access_token(&self, jwt_secret: &str, expiration: u64) -> anyhow::Result<String> {
         let claims = Claims {
             sub: self.id.to_string(),
-            exp: (Utc::now() + Duration::minutes(15)).timestamp() as usize, // Access token available 15min
+            exp: (Utc::now() + Duration::seconds(expiration as i64)).timestamp() as usize,
         };
 
         encode(
@@ -61,10 +61,10 @@ impl User {
         .context("Failed to generate access token")
     }
 
-    pub fn generate_refresh_token(&self, jwt_secret: &str) -> anyhow::Result<String> {
+    pub fn generate_refresh_token(&self, jwt_secret: &str, expiration: u64) -> anyhow::Result<String> {
         let claims = Claims {
             sub: self.id.to_string(),
-            exp: (Utc::now() + Duration::hours(24)).timestamp() as usize, // Refresh token available 24h
+            exp: (Utc::now() + Duration::seconds(expiration as i64)).timestamp() as usize,
         };
 
         encode(

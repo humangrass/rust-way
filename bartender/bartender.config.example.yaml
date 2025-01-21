@@ -2,6 +2,8 @@ app:
   host: localhost
   port: 3001
   jwt_secret: secret
+  access_token_expiration: 3600    # 60 * 60
+  refresh_token_expiration: 604800 # 60 * 60 * 24 * 7
 database:
   host: localhost
   port: 5432
