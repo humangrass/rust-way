@@ -2,6 +2,7 @@ use crate::entities::user::UserModel;
 use log::error;
 use sqlx::PgPool;
 use std::sync::Arc;
+use uuid::Uuid;
 
 pub struct AuthRepository {
     pool: Arc<PgPool>,
@@ -59,6 +60,22 @@ impl AuthRepository {
             UserModel,
             "SELECT id, username, email, password_hash FROM users WHERE username = $1",
             username
+        );
+        match query.fetch_optional(&*self.pool).await {
+            Ok(Some(user)) => Ok(user),
+            Ok(None) => Err(AuthRepositoryError::UserNotFound),
+            Err(e) => {
+                error!("Database error: {}", e);
+                Err(AuthRepositoryError::DatabaseError(e))
+            }
+        }
+    }
+
+    pub async fn find_by_id(&self, id: Uuid) -> Result<UserModel, AuthRepositoryError> {
+        let query = sqlx::query_as!(
+            UserModel,
+            "SELECT id, username, email, password_hash FROM users WHERE id = $1",
+            id
         );
         match query.fetch_optional(&*self.pool).await {
             Ok(Some(user)) => Ok(user),

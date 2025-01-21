@@ -12,8 +12,8 @@ use utoipa_scalar::{Scalar, Servable};
     paths(
         bartender::register,
         bartender::login,
-        // bartender::refresh,
-        // bartender::validate
+        bartender::refresh,
+        bartender::validate
     ),
     tags(
         (name = "Bartender", description = "Authentication service"),

@@ -1,7 +1,7 @@
 use anyhow::Context;
 use chrono::{Duration, Utc};
 use jsonwebtoken::{encode, Algorithm, EncodingKey, Header};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 pub struct UserModel {
@@ -33,10 +33,10 @@ impl From<UserModel> for User {
     }
 }
 
-#[derive(Serialize)]
-struct Claims {
-    sub: String,
-    exp: usize,
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Claims {
+    pub sub: String,
+    pub exp: usize,
 }
 
 pub struct User {

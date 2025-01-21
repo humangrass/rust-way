@@ -78,3 +78,9 @@ pub struct AccessTokens {
     pub token_type: String,
     pub expires_in: u64,
 }
+
+#[derive(Deserialize, ToSchema, Validate)]
+pub struct RefreshPayload {
+    #[validate(length(min = 1, message = "Refresh token must be provider"))]
+    pub refresh_token: String,
+}
