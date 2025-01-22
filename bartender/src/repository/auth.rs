@@ -54,13 +54,14 @@ impl AuthRepository {
 
     pub async fn find_by_username(
         &self,
-        username: &String,
+        username: &str,
     ) -> Result<UserModel, AuthRepositoryError> {
         let query = sqlx::query_as!(
             UserModel,
             "SELECT id, username, email, password_hash FROM users WHERE username = $1",
             username
         );
+        // TODO: Refactoring is needed, but I don't understand how to take out the common part.
         match query.fetch_optional(&*self.pool).await {
             Ok(Some(user)) => Ok(user),
             Ok(None) => Err(AuthRepositoryError::UserNotFound),
@@ -77,6 +78,7 @@ impl AuthRepository {
             "SELECT id, username, email, password_hash FROM users WHERE id = $1",
             id
         );
+        // TODO: Refactoring is needed, but I don't understand how to take out the common part.
         match query.fetch_optional(&*self.pool).await {
             Ok(Some(user)) => Ok(user),
             Ok(None) => Err(AuthRepositoryError::UserNotFound),
