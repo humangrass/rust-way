@@ -1,6 +1,6 @@
 pub mod tokens;
 pub mod claims;
-mod jwt;
+pub mod extractor;
 
 pub struct JWTState {
     pub secret: String,
