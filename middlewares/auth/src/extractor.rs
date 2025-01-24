@@ -7,11 +7,7 @@ use axum_extra::TypedHeader;
 use headers::{authorization::Bearer, Authorization};
 use std::future::Future;
 use std::sync::Arc;
-
-#[derive(Debug, Clone)]
-pub struct AuthenticatedUser {
-    pub id: String,
-}
+use crate::AuthenticatedUser;
 
 #[async_trait]
 impl<S> FromRequestParts<S> for AuthenticatedUser

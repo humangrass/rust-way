@@ -1,5 +1,5 @@
 use crate::claims::Claims;
-use crate::JWTState;
+use crate::{AuthenticatedUser, JWTState};
 use chrono::{Duration, Utc};
 use jsonwebtoken::errors::Error as JwtError;
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
@@ -69,8 +69,4 @@ impl TokenManager {
             id: claims.sub,
         })
     }
-}
-
-pub struct AuthenticatedUser {
-    pub id: String,
 }
