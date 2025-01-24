@@ -2,12 +2,13 @@ use crate::api::helpers::validate_payload;
 use crate::api::payload::RefreshPayload;
 use crate::app::AppState;
 use crate::entities::access_tokens::AccessTokens;
-use crate::entities::claims::Claims;
 use crate::entities::error_response::ErrorResponse;
-use crate::entities::user::User;
+use auth::claims::Claims;
 use axum::http::StatusCode;
 use axum::{Extension, Json};
-use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
+use chrono::Duration;
+use jsonwebtoken::{decode, Algorithm, Validation};
+use models::user::User;
 use std::sync::Arc;
 use uuid::Uuid;
 
@@ -30,7 +31,7 @@ pub async fn refresh(
 
     let token_data = match decode::<Claims>(
         &payload.refresh_token,
-        &DecodingKey::from_secret(state.jwt_state.jwt_secret.as_ref()),
+        state.token_manager.get_decoding_key(),
         &Validation::new(Algorithm::HS256),
     ) {
         Ok(data) => data,
@@ -71,42 +72,42 @@ pub async fn refresh(
         }
     };
 
-    let access_token = match user.generate_access_token(
-        &state.jwt_state.jwt_secret,
-        state.jwt_state.access_token_expiration,
-    ) {
-        Ok(access_token) => access_token,
-        Err(_) => {
-            return Err((
+    let access_token = state
+        .token_manager
+        .generate_access_token(
+            &user,
+            Duration::seconds(state.token_manager.access_token_expiration as i64),
+        )
+        .map_err(|_| {
+            (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(ErrorResponse {
                     message: "Failed to generate access token".to_string(),
                     details: None,
                 }),
-            ))
-        }
-    };
+            )
+        })?;
 
-    let refresh_token = match user.generate_refresh_token(
-        &state.jwt_state.jwt_secret,
-        state.jwt_state.refresh_token_expiration,
-    ) {
-        Ok(refresh_token) => refresh_token,
-        Err(_) => {
-            return Err((
+    let refresh_token = state
+        .token_manager
+        .generate_refresh_token(
+            &user,
+            Duration::seconds(state.token_manager.refresh_token_expiration as i64),
+        )
+        .map_err(|_| {
+            (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(ErrorResponse {
                     message: "Failed to generate refresh token".to_string(),
                     details: None,
                 }),
-            ))
-        }
-    };
+            )
+        })?;
 
     Ok(Json(AccessTokens {
         access_token,
         refresh_token,
         token_type: "Bearer".to_string(),
-        expires_in: state.jwt_state.access_token_expiration,
+        expires_in: state.token_manager.access_token_expiration,
     }))
 }

@@ -1,23 +1,19 @@
 use sqlx::PgPool;
 use std::sync::Arc;
+use auth::tokens::TokenManager;
 use crate::repository::auth::AuthRepository;
 
 pub struct AppState {
     pub auth_repository: Arc<AuthRepository>,
-    pub jwt_state: JWTState,
-}
-
-pub struct JWTState {
-    pub jwt_secret: String,
-    pub access_token_expiration: u64,
-    pub refresh_token_expiration: u64,
+    pub token_manager: Arc<TokenManager>,
 }
 
 impl AppState {
-    pub fn new(database_pool: PgPool, jwt_state: JWTState) -> Self {
+    pub fn new(database_pool: PgPool, token_manager: TokenManager) -> Self {
         let database_pool = Arc::new(database_pool);
         let auth_repository = Arc::new(AuthRepository::new(database_pool));
+        let token_manager = Arc::new(token_manager);
 
-        Self { auth_repository, jwt_state }
+        Self { auth_repository, token_manager }
     }
 }

@@ -1,5 +1,7 @@
-use crate::app::{AppState, JWTState};
+use crate::app::AppState;
 use crate::cli::Cli;
+use auth::tokens::TokenManager;
+use auth::JWTState;
 use log::{info, warn};
 use multitool_hg::database::postgres::new_postgres_pool;
 use multitool_hg::logger::tracer_logger::new_tracer_logger;
@@ -33,14 +35,12 @@ async fn run() -> anyhow::Result<()> {
     let database_pool = new_postgres_pool(config.database)
         .await
         .expect("Failed to create Postgres pool");
-    let app_state = Arc::new(AppState::new(
-        database_pool,
-        JWTState {
-            jwt_secret: config.app.jwt_secret,
-            access_token_expiration: config.app.access_token_expiration,
-            refresh_token_expiration: config.app.refresh_token_expiration,
-        },
-    ));
+    let token_manager = TokenManager::new(JWTState {
+        secret: config.app.jwt_secret,
+        access_token_expiration: config.app.access_token_expiration,
+        refresh_token_expiration: config.app.refresh_token_expiration,
+    });
+    let app_state = Arc::new(AppState::new(database_pool, token_manager));
 
     let app = api::create_router(app_state);
     let address = format!("{}:{}", config.app.host, config.app.port);

@@ -4,6 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+auth = { workspace = true }
+models = { workspace = true }
 multitool-hg = { version = "0.1", features = ["database", "logger"] }
 sqlx = { version = "0.8.3", features = ["runtime-tokio-rustls", "postgres", "chrono", "uuid"] }
 anyhow = "1"
@@ -12,9 +14,9 @@ serde_yaml = "0.9"
 clap = { version = "4", features = ["derive"] }
 tokio = { version = "1", features = ["full"] }
 axum = { version = "0.8.1", features = ["macros"] }
-axum-extra = { version = "0.11.0", features = ["typed-header"] }
+axum-extra = { version = "0.10.0", features = ["typed-header"] }
 utoipa = { version = "5", features = ["axum_extras"] }
-utoipa-scalar = { version = "0.2", features = ["axum"] }
+utoipa-scalar = { version = "0.3.0", features = ["axum"] }
 log = "0.4"
 chrono = { version = "0.4.39", features = ["serde"] }
 uuid = { version = "1.12.0", features = ["v4"] }

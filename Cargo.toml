@@ -2,7 +2,13 @@
 resolver = "2"
 
 members = [
+    "middlewares/auth",
     "bartender",
+    "domain/models",
     "todo",
     "todo-cli",
 ]
+
+[workspace.dependencies]
+auth = { path = "middlewares/auth" }
+models = { path = "domain/models" }

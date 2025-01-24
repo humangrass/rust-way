@@ -1,12 +1,12 @@
 use crate::app::AppState;
-use crate::entities::claims::Claims;
 use crate::entities::error_response::ErrorResponse;
+use auth::claims::Claims;
 use axum::http::StatusCode;
 use axum::{Extension, Json};
 use axum_extra::TypedHeader;
 use headers::authorization::Bearer;
 use headers::Authorization;
-use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
+use jsonwebtoken::{decode, Algorithm, Validation};
 use serde::Serialize;
 use std::sync::Arc;
 use utoipa::ToSchema;
@@ -33,7 +33,7 @@ pub async fn validate(
 
     let token_data = match decode::<Claims>(
         token,
-        &DecodingKey::from_secret(state.jwt_state.jwt_secret.as_ref()),
+        state.token_manager.get_decoding_key(),
         &Validation::new(Algorithm::HS256),
     ) {
         Ok(data) => data,

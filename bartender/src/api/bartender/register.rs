@@ -3,9 +3,9 @@ use crate::api::payload::RegisterPayload;
 use crate::app::AppState;
 use crate::entities::access_tokens::AccessTokens;
 use crate::entities::error_response::ErrorResponse;
-use crate::entities::user::{User, UserModel};
 use axum::http::StatusCode;
 use axum::{debug_handler, Extension, Json};
+use models::user::{User, UserModel};
 use std::sync::Arc;
 
 #[utoipa::path(

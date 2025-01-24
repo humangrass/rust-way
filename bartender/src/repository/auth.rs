@@ -1,4 +1,4 @@
-use crate::entities::user::UserModel;
+use models::user::UserModel;
 use log::error;
 use sqlx::PgPool;
 use std::sync::Arc;
