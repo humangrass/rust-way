@@ -56,6 +56,22 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-target-
 
+      # Setup Rust toolchain
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Install sqlx-cli
+        run: |
+          if ! command -v sqlx &> /dev/null
+          then
+              echo "sqlx-cli not found. Installing..."
+              cargo install sqlx-cli
+          else
+              echo "sqlx-cli is already installed (from cache)."
+          fi
+
       # Cache sqlx-cli installation
       - name: Cache sqlx-cli
         uses: actions/cache@v3
@@ -64,16 +80,6 @@ jobs:
           key: ${{ runner.os }}-sqlx-cli-${{ hashFiles('**/Cargo.toml') }}
           restore-keys: |
             ${{ runner.os }}-sqlx-cli-
-
-      # Setup Rust toolchain
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
-
-      # Install sqlx-cli if not cached
-      - name: Install sqlx-cli
-        run: cargo install sqlx-cli
 
       - name: Apply SQL migrations for todo
         run: |
