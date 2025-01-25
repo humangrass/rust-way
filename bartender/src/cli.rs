@@ -34,7 +34,7 @@ mod tests {
     #[test]
     fn test_default_arguments() {
         let args = Cli::try_parse_from(&["test-app"]).unwrap();
-        assert_eq!(args.config, PathBuf::from("todo.config.yaml"));
+        assert_eq!(args.config, PathBuf::from("bartender.config.yaml"));
         assert_eq!(args.log_level, LogLevel::Info);
     }
 
