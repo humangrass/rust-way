@@ -1,5 +1,5 @@
+use crate::api::entities::ErrorResponse;
 use crate::app::AppState;
-use crate::entities::error_response::ErrorResponse;
 use auth::claims::Claims;
 use axum::http::StatusCode;
 use axum::{Extension, Json};

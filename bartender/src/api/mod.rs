@@ -1,6 +1,7 @@
 mod payload;
 mod bartender;
 mod helpers;
+mod entities;
 
 use crate::app::AppState;
 use axum::Router;

@@ -1,13 +1,12 @@
-use std::sync::Arc;
-use crate::entities::error_response::ErrorResponse;
+use crate::api::entities::{AccessTokens, ErrorResponse};
+use crate::app::AppState;
 use axum::http::StatusCode;
 use axum::Json;
 use chrono::Duration;
-use regex::Regex;
-use validator::{Validate, ValidationError, ValidationErrors};
 use models::user::User;
-use crate::app::AppState;
-use crate::entities::access_tokens::AccessTokens;
+use regex::Regex;
+use std::sync::Arc;
+use validator::{Validate, ValidationError, ValidationErrors};
 
 pub fn validate_payload<T: Validate>(payload: &T) -> Result<(), (StatusCode, Json<ErrorResponse>)> {
     if let Err(validation_error) = payload.validate() {
@@ -155,7 +154,10 @@ mod tests {
     fn test_validate_password_ok() {
         let password = "Password123!";
         let result = validate_password(password);
-        assert!(result.is_ok(), "Expected OK but validation failed with an error");
+        assert!(
+            result.is_ok(),
+            "Expected OK but validation failed with an error"
+        );
     }
 
     #[test]

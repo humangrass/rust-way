@@ -14,7 +14,6 @@ mod api;
 mod app;
 mod cli;
 mod config;
-mod entities;
 
 #[tokio::main]
 async fn main() {

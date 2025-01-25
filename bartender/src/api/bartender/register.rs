@@ -1,8 +1,7 @@
+use crate::api::entities::{AccessTokens, ErrorResponse};
 use crate::api::helpers::validate_payload;
 use crate::api::payload::RegisterPayload;
 use crate::app::AppState;
-use crate::entities::access_tokens::AccessTokens;
-use crate::entities::error_response::ErrorResponse;
 use axum::http::StatusCode;
 use axum::{debug_handler, Extension, Json};
 use models::user::{User, UserModel};

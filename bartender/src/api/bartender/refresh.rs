@@ -1,8 +1,7 @@
+use crate::api::entities::{AccessTokens, ErrorResponse};
 use crate::api::helpers::{generate_tokens, validate_payload};
 use crate::api::payload::RefreshPayload;
 use crate::app::AppState;
-use crate::entities::access_tokens::AccessTokens;
-use crate::entities::error_response::ErrorResponse;
 use auth::claims::Claims;
 use axum::http::StatusCode;
 use axum::{Extension, Json};
