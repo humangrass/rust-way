@@ -1,0 +1,15 @@
+[package]
+name = "auth"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+models = { workspace = true }
+jsonwebtoken = "9.3.0"
+axum = { version = "0.8.1", features = ["macros"] }
+axum-extra = { version = "0.10.0", features = ["typed-header"] }
+async-trait = "0.1.85"
+headers = "0.4.0"
+http = "1.2.0"
+chrono = "0.4.39"
+serde = { version = "1.0.217", features = ["derive"] }
