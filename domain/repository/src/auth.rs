@@ -22,6 +22,19 @@ impl AuthRepositoryError {
     }
 }
 
+fn handle_fetch_optional<T>(
+    result: Result<Option<T>, sqlx::Error>
+) -> Result<T, AuthRepositoryError> {
+    match result {
+        Ok(Some(record)) => Ok(record),
+        Ok(None) => Err(AuthRepositoryError::UserNotFound),
+        Err(e) => {
+            error!("Database error: {}", e);
+            Err(AuthRepositoryError::DatabaseError(e))
+        }
+    }
+}
+
 impl AuthRepository {
     pub fn new(pool: Arc<PgPool>) -> Self {
         AuthRepository { pool }
@@ -61,15 +74,8 @@ impl AuthRepository {
             "SELECT id, username, email, password_hash FROM users WHERE username = $1",
             username
         );
-        // TODO: Refactoring is needed, but I don't understand how to take out the common part.
-        match query.fetch_optional(&*self.pool).await {
-            Ok(Some(user)) => Ok(user),
-            Ok(None) => Err(AuthRepositoryError::UserNotFound),
-            Err(e) => {
-                error!("Database error: {}", e);
-                Err(AuthRepositoryError::DatabaseError(e))
-            }
-        }
+        let result = query.fetch_optional(&*self.pool).await;
+        handle_fetch_optional(result)
     }
 
     pub async fn find_by_id(&self, id: Uuid) -> Result<UserModel, AuthRepositoryError> {
@@ -78,14 +84,7 @@ impl AuthRepository {
             "SELECT id, username, email, password_hash FROM users WHERE id = $1",
             id
         );
-        // TODO: Refactoring is needed, but I don't understand how to take out the common part.
-        match query.fetch_optional(&*self.pool).await {
-            Ok(Some(user)) => Ok(user),
-            Ok(None) => Err(AuthRepositoryError::UserNotFound),
-            Err(e) => {
-                error!("Database error: {}", e);
-                Err(AuthRepositoryError::DatabaseError(e))
-            }
-        }
+        let result = query.fetch_optional(&*self.pool).await;
+        handle_fetch_optional(result)
     }
 }
