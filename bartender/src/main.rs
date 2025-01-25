@@ -15,7 +15,6 @@ mod app;
 mod cli;
 mod config;
 mod entities;
-mod repository;
 
 #[tokio::main]
 async fn main() {

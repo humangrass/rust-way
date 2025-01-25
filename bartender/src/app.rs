@@ -1,7 +1,7 @@
 use sqlx::PgPool;
 use std::sync::Arc;
 use auth::tokens::TokenManager;
-use crate::repository::auth::AuthRepository;
+use repository::auth::AuthRepository;
 
 pub struct AppState {
     pub auth_repository: Arc<AuthRepository>,

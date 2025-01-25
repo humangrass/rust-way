@@ -7,8 +7,10 @@ members = [
     "domain/models",
     "todo",
     "todo-cli",
+    "domain/repository",
 ]
 
 [workspace.dependencies]
 auth = { path = "middlewares/auth" }
 models = { path = "domain/models" }
+repository = { path = "domain/repository" }

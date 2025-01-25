@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 auth = { workspace = true }
 models = { workspace = true }
+repository = { workspace = true }
 multitool-hg = { version = "0.1", features = ["database", "logger"] }
 sqlx = { version = "0.8.3", features = ["runtime-tokio-rustls", "postgres", "chrono", "uuid"] }
 anyhow = "1"
