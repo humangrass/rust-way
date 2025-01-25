@@ -98,3 +98,79 @@ pub fn generate_tokens(
         expires_in: state.token_manager.access_token_expiration,
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use axum::http::StatusCode;
+    use serde_json::Value;
+    use validator::Validate;
+
+    // ---------------------
+    // 1. validate_payload
+    // ---------------------
+
+    #[derive(Validate)]
+    struct TestPayload {
+        #[validate(length(min = 5))]
+        name: String,
+    }
+
+    #[test]
+    fn test_validate_payload_ok() {
+        let payload = TestPayload {
+            name: "ValidName".to_string(),
+        };
+        let result = validate_payload(&payload);
+        assert!(result.is_ok(), "Expected OK but returned error");
+    }
+
+    #[test]
+    fn test_validate_payload_err() {
+        let payload = TestPayload {
+            name: "Ab".to_string(),
+        };
+        let result = validate_payload(&payload);
+
+        match result {
+            Ok(_) => panic!("Expected validation error but returned OK"),
+            Err((status, json)) => {
+                assert_eq!(status, StatusCode::BAD_REQUEST);
+                assert_eq!(json.0.message, "Validation failed");
+                let details = json.0.details.unwrap();
+                if let Value::Object(map) = details {
+                    assert!(map.contains_key("name"), "Error expected for field name");
+                } else {
+                    panic!("Expected JSON object");
+                }
+            }
+        }
+    }
+
+    // ---------------------
+    // 2. validate_password
+    // ---------------------
+
+    #[test]
+    fn test_validate_password_ok() {
+        let password = "Password123!";
+        let result = validate_password(password);
+        assert!(result.is_ok(), "Expected OK but validation failed with an error");
+    }
+
+    #[test]
+    fn test_validate_password_err() {
+        let password = "Password123";
+        let result = validate_password(password);
+        assert!(result.is_err(), "Expected error but returned OK");
+
+        if let Err(e) = result {
+            assert_eq!(e.code, "special_char");
+            let message = e.message.unwrap();
+            assert!(
+                message.contains("special character"),
+                "Expected a message about the need for a special character"
+            );
+        }
+    }
+}
