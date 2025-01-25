@@ -62,6 +62,14 @@ jobs:
           toolchain: stable
           override: true
 
+      - name: Cache sqlx-cli (restore)
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/bin/sqlx
+          key: ${{ runner.os }}-sqlx-cli-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-sqlx-cli-
+
       - name: Install sqlx-cli
         run: |
           if ! command -v sqlx &> /dev/null
@@ -72,12 +80,11 @@ jobs:
               echo "sqlx-cli is already installed (from cache)."
           fi
 
-      # Cache sqlx-cli installation
-      - name: Cache sqlx-cli
+      - name: Cache sqlx-cli (save)
         uses: actions/cache@v3
         with:
-          path: ~/.cargo/bin
-          key: ${{ runner.os }}-sqlx-cli-${{ hashFiles('**/Cargo.toml') }}
+          path: ~/.cargo/bin/sqlx
+          key: ${{ runner.os }}-sqlx-cli-${{ hashFiles('Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-sqlx-cli-
 
