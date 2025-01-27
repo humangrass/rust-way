@@ -1,6 +1,6 @@
 use crate::api::helpers::validate_password;
-use models::user::User;
 use bcrypt::{hash, DEFAULT_COST};
+use models::user::User;
 use serde::Deserialize;
 use utoipa::ToSchema;
 use uuid::Uuid;

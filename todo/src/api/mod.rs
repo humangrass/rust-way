@@ -27,5 +27,6 @@ pub fn create_router(app_state: Arc<AppState>) -> Router {
     Router::new()
         .merge(Scalar::with_url("/docs", ApiDoc::openapi()))
         .merge(api_router)
-        .layer(axum::Extension(app_state))
+        .layer(axum::Extension(app_state.task_repository.clone()))
+        .layer(axum::Extension(app_state.token_manager.clone()))
 }

@@ -10,6 +10,9 @@ use std::path::Path;
 pub struct AppConfig {
     pub host: String,
     pub port: String,
+    pub jwt_secret: String,
+    pub access_token_expiration: u64,
+    pub refresh_token_expiration: u64,
 }
 
 #[derive(Debug, Deserialize, Serialize)]

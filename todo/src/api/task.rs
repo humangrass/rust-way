@@ -1,12 +1,16 @@
 use crate::app::AppState;
 use crate::errors::ErrorResponse;
 use crate::models::task::{Task, TaskModel, TaskRequest, TaskResponse};
+use crate::repository::task::TaskRepository;
+use auth::tokens::TokenManager;
+use auth::AuthenticatedUser;
 use axum::{
     extract::{Extension, Json, Path},
     http::StatusCode,
     routing::{delete, get, post, put},
     Router,
 };
+use log::info;
 use std::sync::Arc;
 
 #[utoipa::path(
@@ -20,9 +24,12 @@ use std::sync::Arc;
     )
 )]
 pub async fn create_task(
-    Extension(state): Extension<Arc<AppState>>,
+    AuthenticatedUser { id }: AuthenticatedUser,
+    Extension(_token_manager): Extension<Arc<TokenManager>>,
+    Extension(task_repository): Extension<Arc<TaskRepository>>,
     Json(payload): Json<TaskRequest>,
 ) -> Result<StatusCode, (StatusCode, Json<ErrorResponse>)> {
+    info!("Hello user {}", id);
     if let Err(validation_error) = payload.validate() {
         return Err((
             StatusCode::BAD_REQUEST,
@@ -34,7 +41,7 @@ pub async fn create_task(
 
     let task: Task = payload.into();
 
-    match state.task_repository.create(&TaskModel::from(task)).await {
+    match task_repository.create(&TaskModel::from(task)).await {
         Ok(_) => Ok(StatusCode::CREATED),
         Err(_) => Err((
             StatusCode::INTERNAL_SERVER_ERROR,
@@ -54,9 +61,9 @@ pub async fn create_task(
     )
 )]
 pub async fn get_tasks(
-    Extension(state): Extension<Arc<AppState>>,
+    Extension(task_repository): Extension<Arc<TaskRepository>>,
 ) -> Result<Json<Vec<TaskResponse>>, (StatusCode, Json<ErrorResponse>)> {
-    match state.task_repository.list().await {
+    match task_repository.list().await {
         Ok(models) => {
             let tasks: Vec<Task> = models.into_iter().map(Task::from).collect();
             Ok(Json(TaskResponse::from_tasks(tasks)))
@@ -84,9 +91,9 @@ pub async fn get_tasks(
 )]
 pub async fn get_task(
     Path(id): Path<i32>,
-    Extension(state): Extension<Arc<AppState>>,
+    Extension(task_repository): Extension<Arc<TaskRepository>>,
 ) -> Result<Json<TaskResponse>, (StatusCode, Json<ErrorResponse>)> {
-    match state.task_repository.by_id(id).await {
+    match task_repository.by_id(id).await {
         Ok(Some(model)) => Ok(Json(TaskResponse::from(Task::from(model)))),
         Ok(None) => Err((
             StatusCode::NOT_FOUND,
@@ -118,7 +125,7 @@ pub async fn get_task(
     )
 )]
 pub async fn update_task(
-    Extension(state): Extension<Arc<AppState>>,
+    Extension(task_repository): Extension<Arc<TaskRepository>>,
     Path(id): Path<i32>,
     Json(payload): Json<TaskRequest>,
 ) -> Result<Json<TaskResponse>, (StatusCode, Json<ErrorResponse>)> {
@@ -133,11 +140,7 @@ pub async fn update_task(
 
     let task: Task = payload.into();
 
-    match state
-        .task_repository
-        .update(id, &TaskModel::from(task))
-        .await
-    {
+    match task_repository.update(id, &TaskModel::from(task)).await {
         Ok(Some(model)) => Ok(Json(TaskResponse::from(Task::from(model)))),
         Ok(None) => Err((
             StatusCode::NOT_FOUND,
@@ -167,10 +170,10 @@ pub async fn update_task(
     )
 )]
 pub async fn delete_task(
-    Extension(state): Extension<Arc<AppState>>,
+    Extension(task_repository): Extension<Arc<TaskRepository>>,
     Path(id): Path<i32>,
 ) -> Result<StatusCode, (StatusCode, Json<ErrorResponse>)> {
-    match state.task_repository.delete(id).await {
+    match task_repository.delete(id).await {
         Ok(_) => Ok(StatusCode::OK),
         Err(sqlx::Error::RowNotFound) => Err((
             StatusCode::NOT_FOUND,
