@@ -1,5 +1,4 @@
 use crate::repository::task::TaskRepository;
-use multitool_hg::rediska::client::Rediska;
 use sqlx::PgPool;
 use std::sync::Arc;
 
@@ -8,9 +7,7 @@ pub struct AppState {
 }
 
 impl AppState {
-    pub fn new(database_pool: PgPool, _redis_pool: Rediska) -> Self {
-        // TODO: _redis_pool
-
+    pub fn new(database_pool: PgPool) -> Self {
         let database_pool = Arc::new(database_pool);
         let task_repository = Arc::new(TaskRepository::new(database_pool));
 

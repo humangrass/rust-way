@@ -1,6 +1,5 @@
 use anyhow::anyhow;
 use multitool_hg::database::config::DatabaseConfig;
-use multitool_hg::rediska::config::RedisConfig;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::prelude::*;
@@ -15,7 +14,6 @@ pub struct AppConfig {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct TodoConfig {
     pub database: DatabaseConfig,
-    pub redis: RedisConfig,
     pub app: AppConfig,
 }
 

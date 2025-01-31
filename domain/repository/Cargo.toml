@@ -6,5 +6,5 @@ edition = "2021"
 [dependencies]
 models = { workspace = true }
 log = "0.4.25"
-sqlx = "0.8.3"
+sqlx = { version = "0.8.3", features = ["runtime-tokio-rustls", "postgres", "chrono", "uuid"] }
 uuid = { version = "1.12.1", features = ["v4"] }
