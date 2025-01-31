@@ -4,7 +4,6 @@ use std::sync::Arc;
 use log::warn;
 use multitool_hg::database::postgres::new_postgres_pool;
 use multitool_hg::logger::tracer_logger::new_tracer_logger;
-use multitool_hg::rediska::client::Rediska;
 use tokio::signal;
 use crate::app::AppState;
 use crate::cli::Cli;
@@ -31,9 +30,8 @@ async fn run() -> anyhow::Result<()> {
 
     let config = config::TodoConfig::new(Path::new(&cli.config)).expect("Failed to load config");
 
-    let redis_pool = Rediska::new(config.redis).await.expect("Failed to create Redis poll");
     let database_pool = new_postgres_pool(config.database).await.expect("Failed to create Postgres pool");
-    let app_state = Arc::new(AppState::new(database_pool, redis_pool));
+    let app_state = Arc::new(AppState::new(database_pool));
 
     let app = api::create_router(app_state);
     let address = format!("{}:{}", config.app.host, config.app.port);
